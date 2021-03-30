@@ -32,8 +32,9 @@ def send_msg(buffer):
         msg_to_send = result_array[1]
         print("Forwarding data to reciever:")
         print(msg_to_send)
-        repeter_dongle.at_spssend(msg_to_send)
-        repeter_dongle.rx_state = "rx_waiting"
+        if not msg_to_send == "":
+            repeter_dongle.at_spssend(msg_to_send)
+            repeter_dongle.rx_state = "rx_waiting"
     except:
         print(".")
 

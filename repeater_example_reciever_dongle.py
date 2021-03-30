@@ -47,7 +47,7 @@ try:
         buffer = reciever_dongle.rx_buffer.decode("utf-8", "ignore")
         if "\r\nhandle_evt_gattc_notification:" in buffer:
             save_msg(buffer)
-        buffer = ""
+        # buffer = ""
         time.sleep(0.5)
 except KeyboardInterrupt:
     reciever_dongle.at_gapdisconnect()
