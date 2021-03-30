@@ -24,6 +24,7 @@ def save_msg(buffer):
 
 try:
     reciever_dongle.at_dual()
+
     ready = input(
         "Press enter to connect to the repeater dongle. (This should be connected first)."
     )
@@ -41,14 +42,17 @@ try:
         print("Trying to connect...")
         time.sleep(2)
 
-    print("Connected. Waiting to recieve...")
+    print("Connected.")
+    reciever_dongle.at_advstart()
+    print("Waiting to recieve...")
 
     while 1:
         buffer = reciever_dongle.rx_buffer.decode("utf-8", "ignore")
         if "\r\nhandle_evt_gattc_notification:" in buffer:
             save_msg(buffer)
-        # buffer = ""
         time.sleep(0.5)
 except KeyboardInterrupt:
+    reciever_dongle.at_cancel_connect()
     reciever_dongle.at_gapdisconnect()
+    reciever_dongle.at_advstop()
     print("Shutting down script.")

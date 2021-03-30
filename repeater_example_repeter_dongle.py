@@ -26,8 +26,6 @@ def send_msg(buffer):
         dongle_sending_msg = result_array1[1]
         dongle_conn_idx = dongle_sending_msg.split("=")
         dongle_conn_idx = dongle_conn_idx[1].strip(")")
-        # print(dongle_sending_msg)
-        # print(dongle_conn_idx)
         result_array = result_array1[2].split(" ")
         msg_to_send = result_array[1]
         print("Forwarding data to reciever:")
@@ -43,15 +41,6 @@ try:
     while 1:
         buffer = repeter_dongle.rx_buffer.decode("utf-8", "ignore")
         if "\r\nCONNECTED." in buffer:
-            # if "handle_evt_gap_connected: conn_idx=" in buffer:
-            #     new_conn_inx = buffer
-            #     new_conn_inx = new_conn_inx.split("\r\n")
-            #     for line in new_conn_inx:
-            #         if "handle_evt_gap_connected: conn_idx=" in line:
-            #             c_idx = line.split(" ")
-            #             c_idx = c_idx[1].split("=")
-            #             c_idx = c_idx[1]
-            #             connection_list.append(c_idx)
             num_of_connected_devices = num_of_connected_devices + 1
             print("A Dongle has connected!")
             repeter_dongle.at_advstart()
@@ -65,7 +54,6 @@ try:
                 if "\r\nconn_idx=" + conn + " DISCONNECTED.\r\n" in buffer:
                     connection_list.remove(conn)
                     num_of_connected_devices = num_of_connected_devices - 1
-                    # print("DONGLE=" + conn + " DISCONNECTED.")
                     print("A Dongle has disconnected!")
         if num_of_connected_devices > 1:
             if "\r\n[Received]:" in buffer:
