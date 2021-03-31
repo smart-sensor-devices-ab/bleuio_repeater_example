@@ -1,7 +1,7 @@
 import time
 from bleuio_lib.bleuio_funcs import BleuIo
 
-repeter_dongle_port = "COM39"
+repeter_dongle_port = "COM39"  # Change this to your dongle's COM port
 
 repeter_dongle = BleuIo(port=repeter_dongle_port)
 repeter_dongle.start_daemon()
@@ -20,6 +20,9 @@ print("Waiting for other dongles to connect...")
 
 
 def send_msg(buffer):
+    """
+    Parses incomming data string for just the data and sends it forward via the Serial Port Service.
+    """
     try:
         result = buffer
         result_array1 = result.split("\r\n")

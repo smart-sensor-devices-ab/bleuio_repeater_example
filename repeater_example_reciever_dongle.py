@@ -1,8 +1,10 @@
 import time
 from bleuio_lib.bleuio_funcs import BleuIo
 
-reciever_dongle_port = "COM74"
-mac_addr_to_repeater = "[0]40:48:FD:E5:2D:9C"
+reciever_dongle_port = "COM74"  # Change this to your dongle's COM port
+mac_addr_to_repeater = (
+    "[0]40:48:FD:E5:2D:B9"  # Change this to your repeater dongle's mac address
+)
 
 buffer = ""
 connected = False
@@ -15,6 +17,9 @@ print("Dongle found.")
 
 
 def save_msg(buffer):
+    """
+    Parses incomming data string for just the data and prints it out.
+    """
     result = buffer
     result_array1 = result.split("\r\n")
     result_array = result_array1[2].split(" ")
@@ -43,7 +48,6 @@ try:
         time.sleep(2)
 
     print("Connected.")
-    reciever_dongle.at_advstart()
     print("Waiting to recieve...")
 
     while 1:

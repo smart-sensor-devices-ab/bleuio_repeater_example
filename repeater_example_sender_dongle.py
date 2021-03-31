@@ -2,8 +2,10 @@ import time
 from bleuio_lib.bleuio_funcs import BleuIo
 import random
 
-sender_dongle_port = "COM38"
-mac_addr_to_repeater = "[0]40:48:FD:E5:2D:9C"
+sender_dongle_port = "COM38"  # Change this to your dongle's COM port
+mac_addr_to_repeater = (
+    "[0]40:48:FD:E5:2D:B9"  # Change this to your repeater dongle's mac address
+)
 
 sender_dongle = BleuIo(port=sender_dongle_port)
 sender_dongle.start_daemon()
@@ -14,6 +16,11 @@ buffer = ""
 
 
 def scan_and_get_results():
+    """
+    Starts a BLE scan for three seconds, looking for results including the 'FF' flag in the advertising data.
+    Then it saves the results in a list and returns one of the results as a string.
+    :return: string
+    """
     print("Scanning...")
     return_data = ""
     result_list = []
