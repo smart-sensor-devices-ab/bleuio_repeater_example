@@ -2,9 +2,9 @@ import time
 from bleuio_lib.bleuio_funcs import BleuIo
 import random
 
-sender_dongle_port = "COM38"  # Change this to your dongle's COM port
+sender_dongle_port = "COM73"  # Change this to your dongle's COM port
 mac_addr_to_repeater = (
-    "[0]40:48:FD:E5:2D:B9"  # Change this to your repeater dongle's mac address
+    "[0]40:48:FD:E5:2D:74"  # Change this to your repeater dongle's mac address
 )
 
 sender_dongle = BleuIo(port=sender_dongle_port)
