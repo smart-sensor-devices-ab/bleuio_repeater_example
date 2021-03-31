@@ -24,6 +24,7 @@ def scan_and_get_results():
     print("Scanning...")
     return_data = ""
     result_list = []
+    time.sleep(0.5)
     try:
         scanning = sender_dongle.at_findscandata("FF")
         if "SCANNING" in scanning[0]:
@@ -93,6 +94,7 @@ try:
                     time.sleep(1)
             data = ""
         time.sleep(1)
+        sender_dongle.rx_state = "rx_waiting"
 except KeyboardInterrupt:
     sender_dongle.at_gapdisconnect()
     print("Shutting down script.")
