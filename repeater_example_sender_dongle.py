@@ -1,100 +1,116 @@
 import time
-from bleuio_lib.bleuio_funcs import BleuIo
-import random
+import serial
 
-sender_dongle_port = "COM73"  # Change this to your dongle's COM port
+your_com_port = "COM73"  # Change this to the com port your dongle is connected to.
 mac_addr_to_repeater = (
     "[0]40:48:FD:E5:2D:74"  # Change this to your repeater dongle's mac address
 )
 
-sender_dongle = BleuIo(port=sender_dongle_port)
-sender_dongle.start_daemon()
-
+# Global
+connecting_to_dongle = True
+dongle_output = ""
 connected = False
-data = ""
-buffer = ""
+connected_devices = 0
+scanning = False
+recieved_message = ""
 
 
-def scan_and_get_results():
-    """
-    Starts a BLE scan for three seconds, looking for results including the 'FF' flag in the advertising data.
-    Then it saves the results in a list and returns one of the results as a string.
-    :return: string
-    """
-    print("Scanning...")
-    return_data = ""
-    result_list = []
-    time.sleep(0.5)
+def get_scan_results(buffer):
     try:
-        scanning = sender_dongle.at_findscandata("FF")
-        if "SCANNING" in scanning[0]:
-            time.sleep(4)
-            sender_dongle.stop_scan()
-            time.sleep(0.5)
-            result_list = sender_dongle.rx_scanning_results
-            if not result_list == []:
-                if len(result_list) > 3:
-                    lines = result_list[2].split("\r\n")
-                    if not lines[1] == "":
-                        data_array = lines[1].split(" ")
-                        lenght = len(data_array)
-                        if lenght == 5:
-                            data = data_array[4]
-                            return_data = data
-            else:
-                sender_dongle.stop_scan()
-                result_list = []
-                sender_dongle.rx_state = "rx_waiting"
-                return_data = ""
-    except:
-        sender_dongle.stop_scan()
-        result_list = []
-        sender_dongle.rx_state = "rx_waiting"
         return_data = ""
-    return return_data
+        line_array = buffer.split("\r\n")
+        word_array = line_array[1].split(" ")
+        if len(word_array) == 5:
+            return_data = word_array[4]
+        else:
+            return_data = ""
+
+        return return_data
+    except:
+        return ""
 
 
-print("Dongle found.")
+print("Connecting to dongle...")
+while connecting_to_dongle:
+    try:
+        console = serial.Serial(
+            port=your_com_port,
+            baudrate=57600,
+            parity="N",
+            stopbits=1,
+            bytesize=8,
+            timeout=0,
+        )
+        if console.is_open.__bool__():
+            connecting_to_dongle = False
+    except:
+        print("Dongle not connected. Please reconnect Dongle.")
+        time.sleep(5)
 
-try:
-    sender_dongle.at_dual()
+print("\n\nFound the Dongle.\n")
+
+
+while 1 and console.is_open.__bool__():
+    time.sleep(0.1)
+    console.write(str.encode("AT+DUAL"))
+    console.write("\r".encode())
+    time.sleep(0.1)
     ready = input(
         "Press enter to connect to the repeater dongle. (This should be connected last)."
     )
+    console.write(str.encode("AT+GAPCONNECT="))
+    console.write(mac_addr_to_repeater.encode())
+    console.write("\r".encode())
+    time.sleep(0.1)
     print("Connecting...")
-    sender_dongle.at_gapconnect(mac_addr_to_repeater)
-    time.sleep(5)
     while not connected:
-        connected_status = sender_dongle.ati()
-        if "\r\nConnected" in connected_status[0]:
-            connected = True
-            break
-        if "\r\nNot Connected" in connected_status[0]:
-            sender_dongle.at_gapconnect(mac_addr_to_repeater)
-            time.sleep(5)
-        print("Trying to connect...")
-        time.sleep(2)
-
-    print("Connected.")
-    print("Getting services...")
-    get_services = sender_dongle.at_get_services()
-    sender_dongle.rx_state = "rx_waiting"
-    time.sleep(2)
-    ready = input("Press enter to start sending data to the repeater dongle.")
-
-    while 1:
-        data = scan_and_get_results()
-        time.sleep(1)
-        if not data == "":
-            sent = sender_dongle.at_spssend(data)
-            time.sleep(0.1)
-            if len(sent) == 1:
-                if "[Sent]" in sent[0]:
-                    print("Data = (" + data + ") sent.")
-                    time.sleep(1)
-            data = ""
-        time.sleep(1)
-        sender_dongle.rx_state = "rx_waiting"
-except KeyboardInterrupt:
-    sender_dongle.at_gapdisconnect()
-    print("Shutting down script.")
+        dongle_output = console.read(console.in_waiting)
+        time.sleep(0.5)
+        if not dongle_output.isspace():
+            if dongle_output.__contains__(str.encode("\r\nCONNECTED.\r\n")):
+                connected = True
+                print("Connected!")
+                ready2 = input(
+                    "Press enter to start scanning and sending data to the repeater dongle."
+                )
+                console.write(str.encode("AT+FINDSCANDATA=FF"))
+                console.write("\r".encode())
+                scanning = True
+            if dongle_output.__contains__(str.encode("DISCONNECTED.")):
+                print("Lost the connection.")
+                connected = False
+            dongle_output = " "
+    while connected:
+        dongle_output = console.read(console.in_waiting)
+        time.sleep(0.5)
+        if not dongle_output.isspace():
+            if dongle_output.__contains__(str.encode("SCANNING")):
+                print("Scanning...")
+                scanning = True
+            if dongle_output.__contains__(str.encode("SCAN COMPLETE")):
+                print("Stopped scanning...")
+                scanning = False
+            if dongle_output.__contains__(str.encode("Device Data")):
+                recieved_message = get_scan_results(
+                    dongle_output.decode("utf-8", "ignore")
+                )
+                if not recieved_message == "":
+                    time.sleep(0.5)
+                    console.write("\x03".encode())
+            if not recieved_message == "":
+                print("Data = (" + recieved_message + ") sent.")
+                console.write(str.encode("AT+SPSSEND="))
+                console.write(recieved_message.encode())
+                console.write("\r".encode())
+                time.sleep(3)
+                recieved_message = ""
+                console.flush()
+                time.sleep(1)
+                console.write(str.encode("AT+FINDSCANDATA=FF"))
+                console.write("\r".encode())
+                time.sleep(0.5)
+                console.flush()
+            if dongle_output.__contains__(str.encode("DISCONNECTED.")):
+                print("Lost the connection.")
+                connected = False
+            dongle_output = ""

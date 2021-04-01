@@ -1,20 +1,16 @@
 import time
-from bleuio_lib.bleuio_funcs import BleuIo
+import serial
 
-
-reciever_dongle_port = "COM74"  # Change this to your dongle's COM port
+your_com_port = "COM71"  # Change this to the com port your dongle is connected to.
 mac_addr_to_repeater = (
     "[0]40:48:FD:E5:2D:74"  # Change this to your repeater dongle's mac address
 )
 
-buffer = ""
+# Global
+connecting_to_dongle = True
+dongle_output = ""
 connected = False
-connecting = ""
-
-reciever_dongle = BleuIo(port=reciever_dongle_port)
-reciever_dongle.start_daemon()
-
-print("Dongle found.")
+recieved_message = ""
 
 
 def save_msg(buffer):
@@ -28,36 +24,60 @@ def save_msg(buffer):
     print("Recieved = " + msg_to_save)
 
 
-try:
-    reciever_dongle.at_dual()
+print("Connecting to dongle...")
+while connecting_to_dongle:
+    try:
+        console = serial.Serial(
+            port=your_com_port,
+            baudrate=57600,
+            parity="N",
+            stopbits=1,
+            bytesize=8,
+            timeout=0,
+        )
+        if console.is_open.__bool__():
+            connecting_to_dongle = False
+    except:
+        print("Dongle not connected. Please reconnect Dongle.")
+        time.sleep(5)
 
+print("\n\nFound the Dongle.\n")
+
+
+while 1 and console.is_open.__bool__():
+    time.sleep(0.1)
+    console.write(str.encode("AT+DUAL"))
+    console.write("\r".encode())
+    time.sleep(0.1)
     ready = input(
         "Press enter to connect to the repeater dongle. (This should be connected first)."
     )
+    console.write(str.encode("AT+GAPCONNECT="))
+    console.write(mac_addr_to_repeater.encode())
+    console.write("\r".encode())
+    time.sleep(0.1)
     print("Connecting...")
-    reciever_dongle.at_gapconnect(mac_addr_to_repeater)
-    time.sleep(5)
     while not connected:
-        connected_status = reciever_dongle.ati()
-        if "\r\nConnected" in connected_status[0]:
-            connected = True
-            break
-        if "\r\nNot Connected" in connected_status[0]:
-            reciever_dongle.at_gapconnect(mac_addr_to_repeater)
-            time.sleep(5)
-        print("Trying to connect...")
-        time.sleep(2)
-
-    print("Connected.")
-    print("Waiting to recieve...")
-
-    while 1:
-        buffer = reciever_dongle.rx_buffer.decode("utf-8", "ignore")
-        if "\r\nhandle_evt_gattc_notification:" in buffer:
-            save_msg(buffer)
+        dongle_output = console.read(console.in_waiting)
         time.sleep(0.5)
-except KeyboardInterrupt:
-    reciever_dongle.at_cancel_connect()
-    reciever_dongle.at_gapdisconnect()
-    reciever_dongle.at_advstop()
-    print("Shutting down script.")
+        if not dongle_output.isspace():
+            if dongle_output.__contains__(str.encode("\r\nCONNECTED.\r\n")):
+                connected = True
+                print("Connected!")
+                time.sleep(3)
+            if dongle_output.__contains__(str.encode("DISCONNECTED.")):
+                print("Lost the connection.")
+                connected = False
+            dongle_output = " "
+    while connected:
+        dongle_output = console.read(console.in_waiting)
+        time.sleep(0.5)
+        if not dongle_output.isspace():
+            if dongle_output.__contains__(
+                str.encode("\r\nhandle_evt_gattc_notification:")
+            ):
+                save_msg(dongle_output.decode("utf-8", "ignore"))
+            if dongle_output.__contains__(str.encode("DISCONNECTED.")):
+                print("Lost the connection.")
+                connected = False
+            dongle_output = ""
