@@ -1,7 +1,7 @@
 import time
 import serial
 
-your_com_port = "COM73"  # Change this to the com port your dongle is connected to.
+your_com_port = "COM71"  # Change this to the com port your dongle is connected to.
 mac_addr_to_repeater = (
     "[0]40:48:FD:E5:2D:74"  # Change this to your repeater dongle's mac address
 )
@@ -64,7 +64,10 @@ while 1 and console.is_open.__bool__():
     time.sleep(0.1)
     print("Connecting...")
     while not connected:
-        dongle_output = console.read(console.in_waiting)
+        try:
+            dongle_output = console.read(console.in_waiting)
+        except:
+            dongle_output = " "
         time.sleep(0.5)
         if not dongle_output.isspace():
             if dongle_output.__contains__(str.encode("\r\nCONNECTED.\r\n")):
@@ -73,7 +76,7 @@ while 1 and console.is_open.__bool__():
                 ready2 = input(
                     "Press enter to start scanning and sending data to the repeater dongle."
                 )
-                console.write(str.encode("AT+FINDSCANDATA=FF"))
+                console.write(str.encode("AT+FINDSCANDATA=5B070503"))
                 console.write("\r".encode())
                 scanning = True
             if dongle_output.__contains__(str.encode("DISCONNECTED.")):
@@ -98,18 +101,21 @@ while 1 and console.is_open.__bool__():
                     time.sleep(0.5)
                     console.write("\x03".encode())
             if not recieved_message == "":
-                print("Data = (" + recieved_message + ") sent.")
-                console.write(str.encode("AT+SPSSEND="))
-                console.write(recieved_message.encode())
-                console.write("\r".encode())
-                time.sleep(3)
-                recieved_message = ""
-                console.flush()
-                time.sleep(1)
-                console.write(str.encode("AT+FINDSCANDATA=FF"))
-                console.write("\r".encode())
-                time.sleep(0.5)
-                console.flush()
+                try:
+                    print("Data = (" + recieved_message + ") sent.")
+                    console.write(str.encode("AT+SPSSEND="))
+                    console.write(recieved_message.encode())
+                    time.sleep(0.1)
+                    console.write("\r".encode())
+                    time.sleep(3)
+                    recieved_message = ""
+                    time.sleep(1)
+                    console.write(str.encode("AT+FINDSCANDATA=5B070503"))
+                    time.sleep(0.1)
+                    console.write("\r".encode())
+                    time.sleep(0.5)
+                except:
+                    time.sleep(0.1)
             if dongle_output.__contains__(str.encode("DISCONNECTED.")):
                 print("Lost the connection.")
                 connected = False

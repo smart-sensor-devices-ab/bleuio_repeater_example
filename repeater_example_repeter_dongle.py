@@ -52,9 +52,11 @@ while 1 and console.is_open.__bool__():
     print("Starting advertising.")
     time.sleep(0.1)
     console.write(str.encode("AT+DUAL"))
+    time.sleep(0.1)
     console.write("\r".encode())
     time.sleep(0.1)
     console.write(str.encode("AT+ADVSTART"))
+    time.sleep(0.1)
     console.write("\r".encode())
     time.sleep(0.1)
     print("Awaiting connections...")
@@ -68,6 +70,7 @@ while 1 and console.is_open.__bool__():
                     connected = True
                 print("Connected!")
                 console.write(str.encode("AT+ADVSTART"))
+                time.sleep(0.1)
                 console.write("\r".encode())
             if dongle_output.__contains__(str.encode("DISCONNECTED.")):
                 print("Lost a connection.")
@@ -81,11 +84,15 @@ while 1 and console.is_open.__bool__():
             if dongle_output.__contains__(str.encode("\r\n[Received]: ")):
                 recieved_message = send_msg(dongle_output.decode("utf-8", "ignore"))
                 if not recieved_message == "":
+                    console.flush()
+                    time.sleep(0.2)
                     print("Forwarding data to reciever:")
                     print(recieved_message)
                     console.write(str.encode("AT+SPSSEND="))
                     console.write(recieved_message.encode())
+                    time.sleep(0.1)
                     console.write("\r".encode())
+                    time.sleep(0.2)
             if dongle_output.__contains__(str.encode("DISCONNECTED.")):
                 print("Lost a connection.")
                 connected_devices = connected_devices - 1

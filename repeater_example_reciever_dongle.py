@@ -1,7 +1,7 @@
 import time
 import serial
 
-your_com_port = "COM71"  # Change this to the com port your dongle is connected to.
+your_com_port = "COM73"  # Change this to the com port your dongle is connected to.
 mac_addr_to_repeater = (
     "[0]40:48:FD:E5:2D:74"  # Change this to your repeater dongle's mac address
 )
@@ -47,6 +47,7 @@ print("\n\nFound the Dongle.\n")
 while 1 and console.is_open.__bool__():
     time.sleep(0.1)
     console.write(str.encode("AT+DUAL"))
+    time.sleep(0.1)
     console.write("\r".encode())
     time.sleep(0.1)
     ready = input(
@@ -54,6 +55,7 @@ while 1 and console.is_open.__bool__():
     )
     console.write(str.encode("AT+GAPCONNECT="))
     console.write(mac_addr_to_repeater.encode())
+    time.sleep(0.1)
     console.write("\r".encode())
     time.sleep(0.1)
     print("Connecting...")
