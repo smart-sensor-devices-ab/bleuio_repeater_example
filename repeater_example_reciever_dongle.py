@@ -1,7 +1,7 @@
 import time
 import serial
 
-your_com_port = "COM73"  # Change this to the com port your dongle is connected to.
+your_com_port = "COM71"  # Change this to the com port your dongle is connected to.
 mac_addr_to_repeater = (
     "[0]40:48:FD:E5:2D:74"  # Change this to your repeater dongle's mac address
 )
@@ -70,6 +70,7 @@ while 1 and console.is_open.__bool__():
             if dongle_output.__contains__(str.encode("DISCONNECTED.")):
                 print("Lost the connection.")
                 connected = False
+                break
             dongle_output = " "
     while connected:
         dongle_output = console.read(console.in_waiting)

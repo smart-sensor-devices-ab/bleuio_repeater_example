@@ -1,7 +1,8 @@
 import time
+from datetime import datetime
 import serial
 
-your_com_port = "COM71"  # Change this to the com port your dongle is connected to.
+your_com_port = "COM73"  # Change this to the com port your dongle is connected to.
 mac_addr_to_repeater = (
     "[0]40:48:FD:E5:2D:74"  # Change this to your repeater dongle's mac address
 )
@@ -76,7 +77,7 @@ while 1 and console.is_open.__bool__():
                 ready2 = input(
                     "Press enter to start scanning and sending data to the repeater dongle."
                 )
-                console.write(str.encode("AT+FINDSCANDATA=5B070503"))
+                console.write(str.encode("AT+FINDSCANDATA=5B070504"))
                 console.write("\r".encode())
                 scanning = True
             if dongle_output.__contains__(str.encode("DISCONNECTED.")):
@@ -99,18 +100,23 @@ while 1 and console.is_open.__bool__():
                 )
                 if not recieved_message == "":
                     time.sleep(0.5)
-                    console.write("\x03".encode())
+                    console.write("\x03".encode())  # Ctrl-C to stop Scan
             if not recieved_message == "":
                 try:
-                    print("Data = (" + recieved_message + ") sent.")
+                    curtime = int(round(time.time()))
+                    t = str(curtime)
+                    now = datetime.now()
+                    print("now =", now)
+                    print("Data = (" + t + "," + recieved_message + ") sent.")
                     console.write(str.encode("AT+SPSSEND="))
+                    console.write(t.encode() + ",".encode())
                     console.write(recieved_message.encode())
                     time.sleep(0.1)
                     console.write("\r".encode())
                     time.sleep(3)
                     recieved_message = ""
                     time.sleep(1)
-                    console.write(str.encode("AT+FINDSCANDATA=5B070503"))
+                    console.write(str.encode("AT+FINDSCANDATA=5B070504"))
                     time.sleep(0.1)
                     console.write("\r".encode())
                     time.sleep(0.5)
