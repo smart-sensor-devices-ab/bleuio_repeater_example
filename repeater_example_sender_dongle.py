@@ -49,20 +49,32 @@ while connecting_to_dongle:
         time.sleep(5)
 
 print("\n\nFound the Dongle.\n")
-
+# Making sure the dongle is not scanning on start up (Ctrl-C to stop Scan)
+console.write("\x03".encode())
+time.sleep(0.1)
+# Making sure the dongle is not connected on startup
+console.write(str.encode("AT+GAPDISCONNECT"))
+time.sleep(0.1)
+console.write("\r".encode())
+time.sleep(0.1)
+# Aborts any ongoing connection attempts
+console.write(str.encode("AT+CANCELCONNECT"))
+time.sleep(0.1)
+console.write("\r".encode())
+time.sleep(0.1)
 
 while 1 and console.is_open.__bool__():
     time.sleep(0.1)
     console.write(str.encode("AT+DUAL"))
-    console.write("\r".encode())
     time.sleep(0.1)
+    console.write("\r".encode())
     ready = input(
         "Press enter to connect to the repeater dongle. (This should be connected last)."
     )
     console.write(str.encode("AT+GAPCONNECT="))
     console.write(mac_addr_to_repeater.encode())
-    console.write("\r".encode())
     time.sleep(0.1)
+    console.write("\r".encode())
     print("Connecting...")
     while not connected:
         try:
@@ -71,8 +83,7 @@ while 1 and console.is_open.__bool__():
             dongle_output = " "
         time.sleep(0.5)
         if not dongle_output.isspace():
-            if dongle_output.__contains__(str.encode("\r\nCONNECTED.\r\n")):
-                connected = True
+            if dongle_output.__contains__(str.encode("\r\nConnected")):
                 print("Connected!")
                 ready2 = input(
                     "Press enter to start scanning and sending data to the repeater dongle."
@@ -80,9 +91,22 @@ while 1 and console.is_open.__bool__():
                 console.write(str.encode("AT+FINDSCANDATA=5B070504"))
                 console.write("\r".encode())
                 scanning = True
-            if dongle_output.__contains__(str.encode("DISCONNECTED.")):
-                print("Lost the connection.")
+                connected = True
+            if dongle_output.__contains__(str.encode("\r\nCONNECTED.\r\n")):
+                time.sleep(4)
+                console.write(str.encode("ATI"))
+                time.sleep(0.1)
+                console.write("\r".encode())
+            if dongle_output.__contains__(
+                str.encode("DISCONNECTED.")
+            ) or dongle_output.__contains__(str.encode("Not Connected")):
                 connected = False
+                print("Failed to connect.")
+                console.write(str.encode("AT+GAPCONNECT="))
+                console.write(mac_addr_to_repeater.encode())
+                time.sleep(0.1)
+                console.write("\r".encode())
+                print("Connecting...")
             dongle_output = " "
     while connected:
         dongle_output = console.read(console.in_waiting)
@@ -124,5 +148,8 @@ while 1 and console.is_open.__bool__():
                     time.sleep(0.1)
             if dongle_output.__contains__(str.encode("DISCONNECTED.")):
                 print("Lost the connection.")
+                # Stops scanning if disconnected
+                console.write("\x03".encode())
+                time.sleep(0.1)
                 connected = False
             dongle_output = ""

@@ -46,6 +46,14 @@ while connecting_to_dongle:
         time.sleep(5)
 
 print("\n\nFound the Dongle.\n")
+# Making sure the dongle is not connected on startup. Running twice in case both dongles are connected.
+console.write(str.encode("AT+GAPDISCONNECT"))
+time.sleep(0.1)
+console.write("\r".encode())
+time.sleep(0.1)
+console.write(str.encode("AT+GAPDISCONNECT"))
+time.sleep(0.1)
+console.write("\r".encode())
 
 
 while 1 and console.is_open.__bool__():
